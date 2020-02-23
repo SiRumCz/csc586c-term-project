@@ -1,2 +1,23 @@
 ## macos
 .DS_Store
+
+## vscode
+.vscode
+
+# executables
+*.exe
+*.out
+*.app
+
+# precompiled headers
+*.gch
+*.pch
+
+# prerequisites
+*.d
+
+# compiled object files
+*.slo
+*.lo
+*.o
+*.obj
