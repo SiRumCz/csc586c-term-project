@@ -9,6 +9,7 @@ namespace csc586 {
 
 using Id = string;
 using Count = int;
+using Score = float;
 
 namespace aos {
 
@@ -19,6 +20,8 @@ struct Node
 	vector< Node* > nodesTo;
 	Count countFrom;
 	Count countTo;
+	Score scorePrev; // Score in iteration i-1;
+	Score score; // Score in iteration i;
 };
 
 }
