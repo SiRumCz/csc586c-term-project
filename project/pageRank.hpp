@@ -7,7 +7,7 @@ using namespace std;
 
 namespace csc586 {
 
-using Id = string;
+using Id = int;
 using Count = int;
 using Score = float;
 
