@@ -1,6 +1,27 @@
+Test settings:
+
 static const string filename = "test/erdos-10000.txt";
 static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
+
+
+Data Structure:
+
+using Id = unsigned short int;
+using Count = unsigned short int;
+using Score = float;
+
+struct Node
+{
+  Id id;
+  vector< Node* > nodesFrom;
+  Count countTo;
+  Score scorePrev; // Score in iteration i-1;
+  Score score; // Score in iteration i;
+};
+
+
+Perf:
 
 Calculation time = 98938 ms // function running time.
 
@@ -23,14 +44,3 @@ Calculation time = 98938 ms // function running time.
 
        0.116719000 seconds user
        0.008049000 seconds sys
-
-struct Node
-{
-  Id id;
-  vector< Node* > nodesFrom;
-  //vector< Node* > nodesTo;
-  //Count countFrom;
-  Count countTo;
-  Score scorePrev; // Score in iteration i-1;
-  Score score; // Score in iteration i;
-};
