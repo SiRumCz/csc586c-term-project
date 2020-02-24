@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <chrono>
 
 #include "pageRank.hpp"
 
@@ -9,8 +10,9 @@ using namespace std;
 using namespace csc586;
 using namespace csc586::aos;
 
-static const string filename = "in.txt";
-static const int nIter = 3;
+static const string filename = "example.txt";
+static const int nIter = 2; // Number of iterations.
+static const float d = 0.85; // Damping factor.
 
 // PageRank Algorithm.
 void pageRank(map< Id, Node* > &nodeMap)
@@ -20,19 +22,19 @@ void pageRank(map< Id, Node* > &nodeMap)
 	float n = nodeMap.size();
 
 	// Initialze scores to 1/n;
-	cout << "  i = 0" << endl;
+	//cout << "  i = 0" << endl;
 	it0 = nodeMap.begin();
 	while (it0 != nodeMap.end())
 	{
 		A = it0->second;
-		A->score = 1 / n;
-		cout << A->id << ": " << A->score << endl;
+		A->score = 1.0 / n;
+		//cout << A->id << ": " << A->score << endl;
 		it0++;
 	}
 
 	for (auto i = 1; i < nIter; ++i) // nIter iterations.
 	{
-		cout << "  i = " << i << endl;
+		//cout << "  i = " << i << endl;
 
 		// Move score's to scorePrev's.
 		it0 = nodeMap.begin();
@@ -40,7 +42,7 @@ void pageRank(map< Id, Node* > &nodeMap)
 		{
 			A = it0->second;
 			A->scorePrev = A->score;
-			A->score = 0.0; // Reset score.
+			A->score = (1 - d)/n; // Reset score for addition.
 			it0++;
 		}
 
@@ -49,15 +51,15 @@ void pageRank(map< Id, Node* > &nodeMap)
 		while (it0 != nodeMap.end())
 		{
 			A = it0->second;
-			cout << "Score " << A->id << " = 0";
+			//cout << "Score " << A->id << " = 0";
 			// For node B to A.
 			for (vector< Node* >::iterator it1 = A->nodesFrom.begin(); it1 != A->nodesFrom.end(); ++it1)
 			{
 				B = *it1;
-				A->score += B->scorePrev / B->countTo; // Update the score of A;
-				cout << " + ("<< B->id << ")" << B->scorePrev << "/" <<B->countTo;
+				A->score += (B->scorePrev / B->countTo)*d; // Update the score of A;
+				//cout << " + ("<< B->id << ")" << B->scorePrev << "/" <<B->countTo;
 			}
-			cout << " = " << A->score << endl;
+			//cout << " = " << A->score << endl;
 			it0++;
 		}
 	}
@@ -112,18 +114,23 @@ int main()
 
 	infile.close();
 
+	auto const start_time = std::chrono::steady_clock::now();
 	pageRank(nodeMap);
+	auto const end_time = std::chrono::steady_clock::now();
+	std::cout << "Calculation time = "
+			  << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
+			  << std::endl;
 
-	/*
+	// Print results.
+	float sum = 0.0;
 	map< Id, Node* >::iterator it = nodeMap.begin();
-	while(it != nodeMap.end())
+	while (it != nodeMap.end())
 	{
-		cout << it->first << "  #From: " << it->second->countFrom << " #To: " << it->second->countTo << endl;
+		cout << it->first << " = " << it->second->score << endl;
+		sum += it->second->score;
 		it++;
 	}
-	*/
-
-
+	cout << "sum = " << sum << endl;
 
 	return 0;
 }
