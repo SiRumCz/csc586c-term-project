@@ -20,7 +20,7 @@ static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 
 sum = 0.210293 // bad.
-Calculation time = 36902 ms
+Calculation time = 36902 us
 
  Performance counter stats for './soa':
 
@@ -50,7 +50,7 @@ static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 
 sum = 0.209658
-Calculation time = 183370 ms
+Calculation time = 183370 us
 
  Performance counter stats for './soa':
 

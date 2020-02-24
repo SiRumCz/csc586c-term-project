@@ -20,7 +20,7 @@ static const string filename = "test/erdos-10000.txt";
 static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 
-Calculation time = 98938 ms // function running time.
+Calculation time = 98938 us // function running time.
 
  Performance counter stats for './main':
 
@@ -50,7 +50,7 @@ static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 
 sum = 0.244375
-Calculation time = 516765 ms
+Calculation time = 516765 us
 
  Performance counter stats for './aos':
 
