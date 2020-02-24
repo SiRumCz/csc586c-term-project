@@ -1,0 +1,74 @@
+Data Structure:
+
+using Id = unsigned short int;
+using Count = unsigned short int;
+using Score = float;
+
+struct Nodes
+{
+  vector< vector< Id > > nodesFrom;
+  vector< Count > countTo;
+  vector< Score > score;
+  vector< Score > scorePrev;
+};
+
+
+Test setting 1:
+
+static const string filename = "test/erdos-10000.txt";
+static const int nIter = 500; // Number of iterations.
+static const float d = 0.85; // Damping factor.
+
+sum = 0.210293 // bad.
+Calculation time = 36902 us
+
+ Performance counter stats for './soa':
+
+             70.11 msec task-clock                #    0.864 CPUs utilized          
+                 5      context-switches          #    0.071 K/sec                  
+                 0      cpu-migrations            #    0.000 K/sec                  
+               306      page-faults               #    0.004 M/sec                  
+       252,824,111      cycles                    #    3.606 GHz                      (51.60%)
+       344,384,679      instructions              #    1.36  insn per cycle           (64.54%)
+        52,049,147      branches                  #  742.349 M/sec                    (64.54%)
+         2,317,033      branch-misses             #    4.45% of all branches          (65.80%)
+        96,485,671      L1-dcache-loads           # 1376.124 M/sec                    (48.40%)
+         8,405,182      L1-dcache-load-misses     #    8.71% of all L1-dcache hits    (22.80%)
+         1,099,125      LLC-loads                 #   15.676 M/sec                    (22.81%)
+               664      LLC-load-misses           #    0.06% of all LL-cache hits     (34.76%)
+
+       0.081160789 seconds time elapsed
+
+       0.058018000 seconds user
+       0.012432000 seconds sys
+
+
+Test setting 2:
+
+static const string filename = "test/erdos-50000.txt";
+static const int nIter = 500; // Number of iterations.
+static const float d = 0.85; // Damping factor.
+
+sum = 0.209658
+Calculation time = 183370 us
+
+ Performance counter stats for './soa':
+
+            314.23 msec task-clock                #    0.884 CPUs utilized          
+                 4      context-switches          #    0.013 K/sec                  
+                 1      cpu-migrations            #    0.003 K/sec                  
+             1,038      page-faults               #    0.003 M/sec                  
+     1,185,023,870      cycles                    #    3.771 GHz                      (49.97%)
+     1,606,381,605      instructions              #    1.36  insn per cycle           (62.70%)
+       239,617,632      branches                  #  762.562 M/sec                    (62.70%)
+        13,423,697      branch-misses             #    5.60% of all branches          (62.70%)
+       493,109,675      L1-dcache-loads           # 1569.278 M/sec                    (59.81%)
+        50,366,789      L1-dcache-load-misses     #   10.21% of all L1-dcache hits    (24.58%)
+        26,842,510      LLC-loads                 #   85.424 M/sec                    (25.46%)
+            12,990      LLC-load-misses           #    0.05% of all LL-cache hits     (36.76%)
+
+       0.355500430 seconds time elapsed
+
+       0.238971000 seconds user
+       0.075674000 seconds sys
+
