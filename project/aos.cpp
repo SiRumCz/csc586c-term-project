@@ -10,7 +10,7 @@ using namespace std;
 using namespace csc586;
 using namespace csc586::aos;
 
-static const string filename = "test/erdos-10000.txt";
+static const string filename = "test/erdos-50000.txt";
 static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 

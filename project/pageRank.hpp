@@ -24,6 +24,7 @@ struct Node
 
 }
 
+
 namespace soa {
 
 struct Nodes
@@ -32,6 +33,20 @@ struct Nodes
 	vector< Count > countTo;
 	vector< Score > score;
 	vector< Score > scorePrev;
+};
+
+}
+
+
+namespace soa_v2 {
+
+struct Nodes
+{
+	vector< vector< Id > > nodesFrom;
+	vector< Count > countTo;
+	// Merge score and scorePrev into one vector.
+	// Node i: previous score at index i*2, current score at index i*2 + 1.
+	vector< Score > score;
 };
 
 }

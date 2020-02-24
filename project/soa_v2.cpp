@@ -8,7 +8,7 @@
 
 using namespace std;
 using namespace csc586;
-using namespace csc586::soa;
+using namespace csc586::soa_v2;
 
 static const string filename = "test/erdos-50000.txt";
 static const int nIter = 500; // Number of iterations.
@@ -28,21 +28,22 @@ void pageRank(Nodes *nodes)
 			// Initialize scores.
 			for (auto i = 0; i < n; ++i)
 			{
-				nodes->score[i] = 1.0 / n;
+				nodes->score[i*2 + 1] = 1.0 / n; // Current score.
 			}
 		} else {
 			// Move current score to previous score, and assign (1-d)/n to each current score (do addition later).
 			for (auto i = 0; i < n; ++i)
 			{
-				nodes->scorePrev[i] = nodes->score[i];
-				nodes->score[i] = (1 - d)/n;
+				nodes->score[i*2] = nodes->score[i*2 + 1]; //nodes->scorePrev[i] = nodes->score[i];
+				nodes->score[i*2 + 1] = (1 - d)/n;
 			}
 			// For every node i, visit the nodes *j going to node i (node *j -> node i).
 			for (auto i = 0; i < n; ++i)
 			{
 				for (vector< Id >::iterator j = nodes->nodesFrom[i].begin(); j != nodes->nodesFrom[i].end(); ++j)
 				{
-					nodes->score[i] += (nodes->scorePrev[*j]/nodes->countTo[*j])*d;
+					// nodes->score[i] += (nodes->scorePrev[*j]/nodes->countTo[*j])*d;
+					nodes->score[i*2 + 1] += (nodes->score[*j*2]/nodes->countTo[*j])*d;
 				}
 			}
 		}
@@ -68,7 +69,6 @@ int main()
     	vector< vector< Id > > {}, // nodesFrom
     	vector< Count > {}, // countTo
     	vector< Score > {}, // score
-    	vector< Score > {} // scorePrev
     });
 
     string line;
@@ -89,8 +89,9 @@ int main()
 			{
 				nodes->nodesFrom.push_back(vector <Id> {});
 				nodes->countTo.push_back(0);
+				// Twice length.
 				nodes->score.push_back(0);
-				nodes->scorePrev.push_back(0);
+				nodes->score.push_back(0);
 			}
 		}
 
@@ -110,8 +111,8 @@ int main()
 	float sum = 0.0;
 	for (long unsigned int i = 0; i < nodes->nodesFrom.size(); ++i)
 	{
-		cout << i << " = " << nodes->score[i] << endl;
-		sum += nodes->score[i];
+		cout << i << " = " << nodes->score[i*2 + 1] << endl;
+		sum += nodes->score[i*2 + 1];
 	}
 	cout << "sum = " << sum << endl;
 	cout << "Calculation time = "

@@ -1,10 +1,3 @@
-Test settings:
-
-static const string filename = "test/erdos-10000.txt";
-static const int nIter = 500; // Number of iterations.
-static const float d = 0.85; // Damping factor.
-
-
 Data Structure:
 
 using Id = unsigned short int;
@@ -21,7 +14,11 @@ struct Node
 };
 
 
-Perf:
+Test setting 1:
+
+static const string filename = "test/erdos-10000.txt";
+static const int nIter = 500; // Number of iterations.
+static const float d = 0.85; // Damping factor.
 
 Calculation time = 98938 ms // function running time.
 
@@ -44,3 +41,34 @@ Calculation time = 98938 ms // function running time.
 
        0.116719000 seconds user
        0.008049000 seconds sys
+
+
+Test setting 2:
+
+static const string filename = "test/erdos-50000.txt";
+static const int nIter = 500; // Number of iterations.
+static const float d = 0.85; // Damping factor.
+
+sum = 0.244375
+Calculation time = 516765 ms
+
+ Performance counter stats for './aos':
+
+            650.58 msec task-clock                #    0.963 CPUs utilized          
+                 7      context-switches          #    0.011 K/sec                  
+                 1      cpu-migrations            #    0.002 K/sec                  
+             1,145      page-faults               #    0.002 M/sec                  
+     2,534,628,183      cycles                    #    3.896 GHz                      (50.04%)
+     1,432,911,248      instructions              #    0.57  insn per cycle           (62.88%)
+       363,924,353      branches                  #  559.388 M/sec                    (62.83%)
+        23,250,714      branch-misses             #    6.39% of all branches          (62.83%)
+       488,995,314      L1-dcache-loads           #  751.635 M/sec                    (61.03%)
+       109,007,685      L1-dcache-load-misses     #   22.29% of all L1-dcache hits    (24.88%)
+        87,678,551      LLC-loads                 #  134.771 M/sec                    (24.88%)
+            66,711      LLC-load-misses           #    0.08% of all LL-cache hits     (37.17%)
+
+       0.675551571 seconds time elapsed
+
+       0.579066000 seconds user
+       0.071884000 seconds sys
+
