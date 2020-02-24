@@ -17,8 +17,8 @@ struct Node
 {
 	Id id;
 	vector< Node* > nodesFrom;
-	vector< Node* > nodesTo;
-	Count countFrom;
+	//vector< Node* > nodesTo;
+	//Count countFrom;
 	Count countTo;
 	Score scorePrev; // Score in iteration i-1;
 	Score score; // Score in iteration i;

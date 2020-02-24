@@ -10,8 +10,8 @@ using namespace std;
 using namespace csc586;
 using namespace csc586::aos;
 
-static const string filename = "example.txt";
-static const int nIter = 2; // Number of iterations.
+static const string filename = "test/erdos-10000.txt";
+static const int nIter = 500; // Number of iterations.
 static const float d = 0.85; // Damping factor.
 
 // PageRank Algorithm.
@@ -92,7 +92,7 @@ int main()
 		
 		if (nodeMap.find(a) == nodeMap.end())
 		{
-			A = new struct Node({a, vector< Node* > {}, vector< Node* > {}, 0, 0, 0.0, 0.0});
+			A = new struct Node({a, vector< Node* > {}, 0, 0.0, 0.0});
 			nodeMap.insert({a, A});
 		} else {
 			A = nodeMap[a];
@@ -100,16 +100,16 @@ int main()
 
 		if (nodeMap.find(b) == nodeMap.end())
 		{
-			B = new struct Node({b, vector< Node* > {}, vector< Node* > {}, 0, 0, 0.0, 0.0});
+			B = new struct Node({b, vector< Node* > {}, 0, 0.0, 0.0});
 			nodeMap.insert({b, B});
 		} else {
 			B = nodeMap[b];
 		}
 
-		A->nodesTo.push_back(B);
+		//A->nodesTo.push_back(B);
 		A->countTo++;
 		B->nodesFrom.push_back(A);
-		B->countFrom++;
+		//B->countFrom++;
 	}
 
 	infile.close();
@@ -117,11 +117,9 @@ int main()
 	auto const start_time = std::chrono::steady_clock::now();
 	pageRank(nodeMap);
 	auto const end_time = std::chrono::steady_clock::now();
-	std::cout << "Calculation time = "
-			  << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
-			  << std::endl;
 
 	// Print results.
+
 	float sum = 0.0;
 	map< Id, Node* >::iterator it = nodeMap.begin();
 	while (it != nodeMap.end())
@@ -131,6 +129,8 @@ int main()
 		it++;
 	}
 	cout << "sum = " << sum << endl;
-
+	cout << "Calculation time = "
+			  << chrono::duration_cast<chrono::microseconds>( end_time - start_time ).count()
+			  << " ms" << endl;
 	return 0;
 }
