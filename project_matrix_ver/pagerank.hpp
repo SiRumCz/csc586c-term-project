@@ -7,7 +7,7 @@ namespace csc586_matrix
 {
     using Score = double;
     using Entry = double;
-    using Count = short int;
+    using Count = uint32_t;
 
     namespace soa_matrix
     {
