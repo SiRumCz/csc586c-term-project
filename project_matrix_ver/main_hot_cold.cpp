@@ -174,6 +174,6 @@ int main ()
     print_score_sum( th );
     std::cout << "Calculation time = "
 		      << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
-		      << " ms" << std::endl;
+		      << " us" << std::endl;
     return 0;
 }

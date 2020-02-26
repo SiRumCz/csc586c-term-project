@@ -116,7 +116,7 @@ int main()
 	cout << "sum = " << sum << endl;
 	cout << "Calculation time = "
 			  << chrono::duration_cast<chrono::microseconds>( end_time - start_time ).count()
-			  << " ms" << endl;
+			  << " us" << endl;
 
 	return 0;
 }
