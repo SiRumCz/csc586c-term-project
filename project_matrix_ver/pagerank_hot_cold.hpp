@@ -1,5 +1,5 @@
-#ifndef CSC586C_PAGERANK_BASELINE
-#define CSC586C_PAGERANK_BASELINE
+#ifndef CSC586C_PAGERANK_HC
+#define CSC586C_PAGERANK_HC
 
 #include <vector>
 
@@ -11,14 +11,19 @@ namespace csc586_matrix
 
     namespace soa_matrix
     {
-        struct Tables
+        /* data accessed during the pagerank algorithm */
+        struct Tables_Hot
         {
-            /* TODO: separate hot and cold data */
-            std::vector< std::vector< Count > > visited_matrix;
             std::vector< std::vector< Entry > > ij_entries_matrix;
             std::vector< Score > scores;
+        };
+        /* data used in prep stage */
+        struct Tables_Cold
+        {
+            std::vector< std::vector< Count > > visited_matrix;
             std::vector< Count > num_entries;
         };
+        
     }
 }
 
