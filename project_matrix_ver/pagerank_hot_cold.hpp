@@ -7,23 +7,28 @@ namespace csc586_matrix
 {
     using Score = double;
     using Entry = double;
-    using Count = short int;
+    using Count = uint32_t;
 
     namespace soa_matrix
     {
         /* data accessed during the pagerank algorithm */
         struct Tables_Hot
         {
-            std::vector< std::vector< Entry > > ij_entries_matrix;
-            std::vector< Score > scores;
+            std::vector< Entry > entries_col;
+            Score score;
         };
         /* data used in prep stage */
         struct Tables_Cold
         {
-            std::vector< std::vector< Count > > visited_matrix;
-            std::vector< Count > num_entries;
+            std::vector< Count > visited_col;
+            Count num_entry;
         };
-        
+        /* final matrix table consists of hot and cold data */
+        struct Matrix_soa
+        {
+            std::vector< Tables_Hot > hot;
+            std::vector< Tables_Cold > cold;
+        };
     }
 }
 

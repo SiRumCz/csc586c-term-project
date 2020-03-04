@@ -21,7 +21,7 @@ const std::string filename = "../test/erdos-10000.txt";
 void print_scores( Tables *table )
 {
     /* print score matrix */
-    float sum = 0;
+    double sum = 0;
     for ( auto i = 0; i < N; ++i )
     {
         sum += table->scores[ i ];
@@ -32,7 +32,7 @@ void print_scores( Tables *table )
 
 void print_score_sum( Tables *table )
 {
-    float sum =  std::accumulate( table->scores.begin(), table->scores.end(), 0.0 );
+    double sum =  std::accumulate( table->scores.begin(), table->scores.end(), 0.0 );
     std::cout << "s=" << sum << std::endl;
 }
 

@@ -18,25 +18,29 @@ const int N = 10000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
 const std::string filename = "../test/erdos-10000.txt";
 
-void print_scores( Tables_Hot *table )
+void print_scores( Matrix_soa *table )
 {
     /* print score matrix */
-    float sum = 0;
+    double sum = 0;
     for ( auto i = 0; i < N; ++i )
     {
-        sum += table->scores[ i ];
-        std::cout << i << "=" << table->scores[ i ] << std::endl;
+        sum += table->hot[ i ].score;
+        std::cout << i << "=" << table->hot[ i ].score << std::endl;
     }
     std::cout << "s=" << sum << std::endl;
 }
 
-void print_score_sum( Tables_Hot *table )
+void print_score_sum( Matrix_soa *table )
 {
-    float sum =  std::accumulate( table->scores.begin(), table->scores.end(), 0.0 );
+    double sum = 0;
+    for ( auto i = 0; i < N; ++i )
+    {
+        sum += table->hot[ i ].score;
+    }
     std::cout << "s=" << sum << std::endl;
 }
 
-void print_table( Tables_Hot *tableh, Tables_Cold *tablec )
+void print_table( Matrix_soa *table )
 {
     /* print visited matrix */
     std::cout << "Entry Visited Table: " << std::endl;
@@ -44,7 +48,7 @@ void print_table( Tables_Hot *tableh, Tables_Cold *tablec )
     {
         for ( auto j = 0; j < N; ++j )
         {
-            std::cout << tablec->visited_matrix[ i ][ j ] << " ";
+            std::cout << table->cold[ i ].visited_col[ j ] << " ";
         }
         std::cout << std::endl;
     }
@@ -54,7 +58,7 @@ void print_table( Tables_Hot *tableh, Tables_Cold *tablec )
     {
         for ( auto j = 0; j < N; ++j )
         {
-            std::cout << tableh->ij_entries_matrix[ i ][ j ] << " ";
+            std::cout << table->hot[ i ].entries_col[ j ] << " ";
         }
         std::cout << std::endl;
     }
@@ -62,17 +66,17 @@ void print_table( Tables_Hot *tableh, Tables_Cold *tablec )
     std::cout << "Score Matrix Table: " << std::endl;
     for ( auto i = 0; i < N; ++i )
     {
-        std::cout << tableh->scores[ i ] << std::endl;
+        std::cout << table->hot[ i ].score << std::endl;
     }
     /* print num entries matrix */
     std::cout << "Entries Matrix Table: " << std::endl;
     for ( auto i = 0; i < N; ++i )
     {
-        std::cout << tablec->num_entries[ i ] << std::endl;
+        std::cout << table->cold[ i ].num_entry << std::endl;
     }
 }
 
-void read_inputfile( Tables_Cold *tablec )
+void read_inputfile( Matrix_soa *table )
 {
     // Read file and build node.
     std::ifstream infile;
@@ -94,35 +98,35 @@ void read_inputfile( Tables_Cold *tablec )
     	// Process pair (a, b).
         // std::cout << a << " " << b << std::endl;
 		
-        tablec->visited_matrix[ a ][ b ] = 1;
-        tablec->num_entries[ a ] += 1;
+        table->cold[ a ].visited_col[ b ] = 1;
+        table->cold[ a ].num_entry += 1;
 	}
 
 	infile.close();
 }
 
-void update_entries( Tables_Hot *tableh, Tables_Cold *tablec )
+void update_entries( Matrix_soa *table )
 {
     for ( auto i = 0; i < N; ++i )
     {
         for ( auto j = 0; j < N; ++j )
         {
-            if ( tablec->num_entries[ j ] == 0 )
+            if ( table->cold[ j ].num_entry == 0 )
             {
                 // dangling node: 1 / N
-                tableh->ij_entries_matrix[ i ][ j ] = 1.0 / N;
+                table->hot[ i ].entries_col[ j ] = 1.0 / N;
             }
-            else if ( tablec->visited_matrix[ j ][ i ] == 1 )
+            else if ( table->cold[ j ].visited_col[ i ] == 1 )
             {
                 // if v(j, i) is visited then a(ij) = 1/L(j)
-                tableh->ij_entries_matrix[ i ][ j ] = 1.0 / tablec->num_entries[ j ];
+                table->hot[ i ].entries_col[ j ] = 1.0 / table->cold[ j ].num_entry;
             }
             // else{ table->ij_entries_matrix[ i ][ j ] = 0.0; }
         }
     }
 }
 
-void cal_pagerank( Tables_Hot *table )
+void cal_pagerank( Matrix_soa *table )
 {
     for ( auto i = 0; i < num_iter-1; ++i )
     {
@@ -130,7 +134,7 @@ void cal_pagerank( Tables_Hot *table )
         std::vector< Score > old_scores = {};
         for ( auto j = 0; j < N; ++j )
         {
-            old_scores.push_back( table->scores[ j ] );
+            old_scores.push_back( table->hot[ j ].score );
         }
         /* update pagerank scores */
         for ( auto j = 0; j < N; ++j )
@@ -138,9 +142,9 @@ void cal_pagerank( Tables_Hot *table )
             double sum = 0.0;
             for ( auto k = 0; k < N; ++k )
             {
-                sum += old_scores[ k ] * table->ij_entries_matrix[ j ][ k ];
+                sum += old_scores[ k ] * table->hot[ j ].entries_col[ k ];
             }
-            table->scores[ j ] = sum;
+            table->hot[ j ].score = sum;
         }
     }
 }
@@ -148,32 +152,34 @@ void cal_pagerank( Tables_Hot *table )
 int main ()
 {
     /* initialize matrix table */
-    Tables_Hot* th = new struct Tables_Hot( { std::vector< std::vector< Entry > > {}, std::vector< Score > {} } );
-    Tables_Cold* tc = new struct Tables_Cold( { std::vector< std::vector< Count > > {}, std::vector< Count > {} } );
+    Matrix_soa* t = new Matrix_soa( { 
+        std::vector< Tables_Hot > {}, 
+        std::vector< Tables_Cold > {} } );
     
+    /* initialize matrix */
     for ( auto i = 0; i < N; ++i )
     {
-        tc->visited_matrix.push_back( std::vector< Count > {} );
-        th->ij_entries_matrix.push_back( std::vector< Entry > {} );
+        t->cold.push_back( Tables_Cold( { std::vector< Count > {}, 0 } ) );
+        t->hot.push_back( Tables_Hot( { std::vector< Entry > {}, 0.0 } ) );
         for ( auto j = 0; j < N; ++j )
         {
-            tc->visited_matrix[ i ].push_back( 0 ); // 0: unvisited, 1: visited
-            th->ij_entries_matrix[ i ].push_back( 0.0 );
+            t->cold[ i ].visited_col.push_back( 0 );
+            t->hot[ i ].entries_col.push_back( 0.0 );
         }
-        th->scores.push_back( 1.0 / N );
-        tc->num_entries.push_back( 0 );
+        t->hot[ i ].score = 1.0 / N;
+        t->cold[ i ].num_entry = 0;
     }
 
-    read_inputfile( tc );
-    update_entries( th, tc );
+    read_inputfile( t );
+    update_entries( t );
     /* timing the pagerank algorithm */
     auto const start_time = std::chrono::steady_clock::now();
-    cal_pagerank( th );
+    cal_pagerank( t );
     auto const end_time = std::chrono::steady_clock::now();
-    // print_scores( th );
-    print_score_sum( th );
+    // print_scores( t );
+    print_score_sum( t );
     std::cout << "Calculation time = "
-		      << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
+		      << std::chrono::duration_cast< std::chrono::microseconds >( end_time - start_time ).count()
 		      << " us" << std::endl;
     return 0;
 }
