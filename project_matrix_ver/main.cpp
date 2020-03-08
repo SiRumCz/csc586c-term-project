@@ -124,6 +124,7 @@ void update_entries( Tables *table )
 
 void cal_pagerank( Tables *table )
 {
+
     for ( auto i = 0; i < num_iter-1; ++i )
     {
         /* scores from previous iteration */
@@ -148,10 +149,10 @@ void cal_pagerank( Tables *table )
 int main ()
 {
     /* initialize matrix table */
-    Tables* t = new struct Tables( { std::vector< std::vector< Count > > {}, \
-                                     std::vector< std::vector< Entry > > {}, \
-                                     std::vector< Score > {}, \
-                                     std::vector< Count > {} } );
+    Tables* t = new struct Tables( { std::vector< Score > {},
+                                     std::vector< Count > {},
+                                     std::vector< std::vector< Count > > {}, 
+                                     std::vector< std::vector< Entry > > {} } );
     for ( auto i = 0; i < N; ++i )
     {
         t->visited_matrix.push_back( std::vector< Count > {} );

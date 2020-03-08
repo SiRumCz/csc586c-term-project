@@ -154,13 +154,14 @@ int main ()
     /* initialize matrix table */
     Matrix_soa* t = new Matrix_soa( { 
         std::vector< Tables_Hot > {}, 
-        std::vector< Tables_Cold > {} } );
+        std::vector< Tables_Cold > {} 
+    } );
     
     /* initialize matrix */
     for ( auto i = 0; i < N; ++i )
     {
-        t->cold.push_back( Tables_Cold( { std::vector< Count > {}, 0 } ) );
-        t->hot.push_back( Tables_Hot( { std::vector< Entry > {}, 0.0 } ) );
+        t->cold.push_back( Tables_Cold( { 0, std::vector< Count > {} } ) );
+        t->hot.push_back( Tables_Hot( { 0.0, std::vector< Entry > {} } ) );
         for ( auto j = 0; j < N; ++j )
         {
             t->cold[ i ].visited_col.push_back( 0 );
