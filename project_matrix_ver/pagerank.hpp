@@ -13,10 +13,10 @@ namespace csc586_matrix
     {
         struct Tables
         {
-            std::vector< std::vector< Count > > visited_matrix; // 1: visited, 0: unvisited
-            std::vector< std::vector< Entry > > ij_entries_matrix; // NxN matrix of (i, j)-entries
             std::vector< Score > scores;
             std::vector< Count > num_entries;
+            std::vector< std::vector< Count > > visited_matrix; // 1: visited, 0: unvisited
+            std::vector< std::vector< Entry > > ij_entries_matrix; // NxN matrix of (i, j)-entries
         };
     }
 }
