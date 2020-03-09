@@ -7,8 +7,8 @@ using namespace std;
 
 namespace csc586 {
 
-using Id = unsigned short int;
-using Count = unsigned short int;
+using Id = int;
+using Count = int;
 using Score = float;
 
 namespace aos {
