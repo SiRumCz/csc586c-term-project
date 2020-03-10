@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <chrono> // timing
+#include <algorithm> // sort
 #include <numeric> // accumulate
 
 #include "pagerank.hpp"
@@ -17,11 +18,12 @@ using namespace csc586_matrix::soa_matrix;
 const int N = 10000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
 const std::string filename = "../test/erdos-10000.txt";
+const float d = 0.85; // damping factor
 
 void print_scores( Tables *table )
 {
     /* print score matrix */
-    double sum = 0;
+    float sum = 0;
     for ( auto i = 0; i < N; ++i )
     {
         sum += table->scores[ i ];
@@ -30,10 +32,30 @@ void print_scores( Tables *table )
     std::cout << "s=" << sum << std::endl;
 }
 
+int comp( std::tuple< int, Score > const &i, std::tuple< int, Score > const &j )
+{
+    return std::get< 1 >( i ) > std::get< 1 >( j );
+}
+
 void print_score_sum( Tables *table )
 {
-    double sum =  std::accumulate( table->scores.begin(), table->scores.end(), 0.0 );
+    float sum =  std::accumulate( table->scores.begin(), table->scores.end(), 0.0 );
     std::cout << "s=" << sum << std::endl;
+}
+
+void print_top_5( Tables *table )
+{
+    std::vector< std::tuple< int, Score > > sorted = {};
+    for ( auto i = 0; i < N; ++i )
+    {
+        sorted.push_back( std::tuple< int, Score >{ i, table->scores[ i ] } );
+    }
+    std::sort( sorted.begin(), sorted.end(), comp );
+    for ( auto i = 0; i < std::min( 5, N); ++i )
+    {
+        std::cout << std::get< 0 >( sorted[ i ] ) << "(" << std::get< 1 >( sorted[ i ] ) << ") ";
+    }
+    std::cout << std::endl;
 }
 
 void print_table( Tables *table )
@@ -110,12 +132,12 @@ void update_entries( Tables *table )
             if ( table->num_entries[ j ] == 0 )
             {
                 // dangling node: 1 / N
-                table->ij_entries_matrix[ i ][ j ] = 1.0 / N;
+                table->ij_entries_matrix[ i ][ j ] = 1.0f / N;
             }
             else if ( table->visited_matrix[ j ][ i ] == 1 )
             {
                 // if v(j, i) is visited then a(ij) = 1/L(j)
-                table->ij_entries_matrix[ i ][ j ] = 1.0 / table->num_entries[ j ];
+                table->ij_entries_matrix[ i ][ j ] = 1.0f / table->num_entries[ j ];
             }
             // else{ table->ij_entries_matrix[ i ][ j ] = 0.0; }
         }
@@ -124,7 +146,6 @@ void update_entries( Tables *table )
 
 void cal_pagerank( Tables *table )
 {
-
     for ( auto i = 0; i < num_iter-1; ++i )
     {
         /* scores from previous iteration */
@@ -136,12 +157,12 @@ void cal_pagerank( Tables *table )
         /* update pagerank scores */
         for ( auto j = 0; j < N; ++j )
         {
-            double sum = 0.0;
+            float sum = 0.0f;
             for ( auto k = 0; k < N; ++k )
             {
                 sum += old_scores[ k ] * table->ij_entries_matrix[ j ][ k ];
             }
-            table->scores[ j ] = sum;
+            table->scores[ j ] = d * old_scores[ j ] + ( 1.0f - d ) * sum;
         }
     }
 }
@@ -149,33 +170,34 @@ void cal_pagerank( Tables *table )
 int main ()
 {
     /* initialize matrix table */
-    Tables* t = new struct Tables( { std::vector< Score > {},
-                                     std::vector< Count > {},
-                                     std::vector< std::vector< Count > > {}, 
-                                     std::vector< std::vector< Entry > > {} } );
-    for ( auto i = 0; i < N; ++i )
-    {
-        t->visited_matrix.push_back( std::vector< Count > {} );
-        t->ij_entries_matrix.push_back( std::vector< Entry > {} );
-        for ( auto j = 0; j < N; ++j )
-        {
-            t->visited_matrix[ i ].push_back( 0 ); // 0: unvisited, 1: visited
-            t->ij_entries_matrix[ i ].push_back( 0.0 );
-        }
-        t->scores.push_back( 1.0 / N );
-        t->num_entries.push_back( 0 );
-    }
+    Tables* t = new struct Tables( { std::vector< Score > ( N, 1.0f / N ),
+                                     std::vector< Count > ( N, 0 ),
+                                     std::vector< std::vector< Count > > ( N, std::vector< Count > ( N, 0 ) ), 
+                                     std::vector< std::vector< Entry > > ( N, std::vector< Entry > ( N, 0.0f ) ) } );
 
     read_inputfile( t );
+    /* timing the pre processing */
+    auto start_time = std::chrono::steady_clock::now();
     update_entries( t );
+    auto end_time = std::chrono::steady_clock::now();
+    auto const update_duration = std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count();
     /* timing the pagerank algorithm */
-    auto const start_time = std::chrono::steady_clock::now();
+    start_time = std::chrono::steady_clock::now();
     cal_pagerank( t );
-    auto const end_time = std::chrono::steady_clock::now();
+    end_time = std::chrono::steady_clock::now();
+    auto const pr_duration = std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count();
     // print_scores( t );
+    print_top_5( t );
     print_score_sum( t );
-    std::cout << "Calculation time = "
-		      << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
-		      << " us" << std::endl;
+    std::cout << "Entries update time = "
+              << update_duration
+              << " us"
+              << "\nCalculation time = "
+		      << pr_duration
+		      << " us" 
+              << "\nTotal time = "
+              << update_duration + pr_duration
+              << " us"
+              << std::endl;
     return 0;
 }
