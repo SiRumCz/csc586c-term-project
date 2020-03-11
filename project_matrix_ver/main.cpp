@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <chrono> // timing
 #include <algorithm> // sort
 #include <numeric> // accumulate
