@@ -9,7 +9,6 @@
 #include <chrono> // timing
 #include <numeric> // accumulate
 #include <algorithm> // sort
-#include <omp.h>    // for multi-core parallelism
 
 #include "pagerank_hot_cold.hpp"
 
@@ -20,26 +19,15 @@ using namespace csc586_matrix::soa_matrix;
 const int N = 10000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
 const std::string filename = "../test/erdos-10000.txt";
-const float d = 0.85f; // damping factor. 0.85 as defined by Google
 
 void print_scores( Matrix_soa *table )
 {
     /* print score matrix */
-    float sum = 0;
+    double sum = 0;
     for ( auto i = 0; i < N; ++i )
     {
         sum += table->hot[ i ].score;
         std::cout << i << "=" << table->hot[ i ].score << std::endl;
-    }
-    std::cout << "s=" << sum << std::endl;
-}
-
-void print_score_sum( Matrix_soa *table )
-{
-    float sum = 0;
-    for ( auto i = 0; i < N; ++i )
-    {
-        sum += table->hot[ i ].score;
     }
     std::cout << "s=" << sum << std::endl;
 }
@@ -62,6 +50,16 @@ void print_top_5( Matrix_soa *table )
         std::cout << std::get< 0 >( sorted[ i ] ) << "(" << std::get< 1 >( sorted[ i ] ) << ") ";
     }
     std::cout << std::endl;
+}
+
+void print_score_sum( Matrix_soa *table )
+{
+    double sum = 0;
+    for ( auto i = 0; i < N; ++i )
+    {
+        sum += table->hot[ i ].score;
+    }
+    std::cout << "s=" << sum << std::endl;
 }
 
 void print_table( Matrix_soa *table )
@@ -131,7 +129,6 @@ void read_inputfile( Matrix_soa *table )
 
 void update_entries( Matrix_soa *table )
 {
-    #pragma omp parallel for num_threads( 8 )
     for ( auto i = 0; i < N; ++i )
     {
         for ( auto j = 0; j < N; ++j )
@@ -139,12 +136,12 @@ void update_entries( Matrix_soa *table )
             if ( table->cold[ j ].num_entry == 0 )
             {
                 // dangling node: 1 / N
-                table->hot[ i ].entries_col[ j ] = 1.0f / N;
+                table->hot[ i ].entries_col[ j ] = 1.0 / N;
             }
             else if ( table->cold[ j ].visited_col[ i ] == 1 )
             {
                 // if v(j, i) is visited then a(ij) = 1/L(j)
-                table->hot[ i ].entries_col[ j ] = 1.0f / table->cold[ j ].num_entry;
+                table->hot[ i ].entries_col[ j ] = 1.0 / table->cold[ j ].num_entry;
             }
             // else{ table->ij_entries_matrix[ i ][ j ] = 0.0; }
         }
@@ -153,30 +150,41 @@ void update_entries( Matrix_soa *table )
 
 void cal_pagerank( Matrix_soa *table )
 {
-    for ( auto i = 0; i < num_iter-1; ++i )
+    for ( auto i = 0; i < num_iter - 1; ++i )
     {
         /* scores from previous iteration */
         std::vector< Score > old_scores = {};
-        old_scores.reserve( N );
-        #pragma omp parallel for num_threads( 8 )
         for ( auto j = 0; j < N; ++j )
         {
-            old_scores[ j ] = table->hot[ j ].score;
+            old_scores.push_back( table->hot[ j ].score );
+            table->hot[ j ].score = 0.0; // reset score
         }
-        /* update pagerank scores */
-        #pragma omp parallel for num_threads( 8 )
-        for ( auto j = 0; j < N; ++j )
+
+        /* update pagerank scores, apply tiling for better temporal locality performance ? */
+        auto const tile_size = 4;
+        for ( auto j = 0; j < N; j += tile_size )
         {
-            float sum [ 2 ] = { 0.0f, 0.0f };
-            #pragma omp parallel for num_threads( 2 )
+            // going through each row
             for ( auto k = 0; k < N; ++k )
             {
-                auto const th_id = omp_get_thread_num();
-                sum[ th_id ] += old_scores[ k ] * table->hot[ j ].entries_col[ k ];
+                // only access <tile_size> number of entries
+                for ( auto m = j; m < std::min( N, j + tile_size ); ++m )
+                {
+                    table->hot[ k ].score += old_scores[ m ] * table->hot[ k ].entries_col[ m ];
+                }
             }
-            table->hot[ j ].score = d * old_scores[ j ] + \
-            ( 1.0f - d ) * std::accumulate( std::begin( sum ), std::end( sum ), 0.0f );
         }
+
+        // /* update pagerank scores */
+        // for ( auto j = 0; j < N; ++j )
+        // {
+        //     double sum = 0.0;
+        //     for ( auto k = 0; k < N; ++k )
+        //     {
+        //         sum += old_scores[ k ] * table->hot[ j ].entries_col[ k ];
+        //     }
+        //     table->hot[ j ].score = sum;
+        // }
     }
 }
 
@@ -197,15 +205,14 @@ int main ()
     auto start_time = std::chrono::steady_clock::now();
     update_entries( t );
     auto end_time = std::chrono::steady_clock::now();
-    auto const update_duration = std::chrono::duration_cast< std::chrono::microseconds >( end_time - start_time ).count();
+    auto const update_duration = std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count();
     /* timing the pagerank algorithm */
     start_time = std::chrono::steady_clock::now();
     cal_pagerank( t );
     end_time = std::chrono::steady_clock::now();
-    auto const pr_duration = std::chrono::duration_cast< std::chrono::microseconds >( end_time - start_time ).count();
+    auto const pr_duration = std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count();
     // print_scores( t );
-    print_top_5( t );
-    print_score_sum( t );
+    // print_score_sum( t );
     std::cout << "Entries update time = "
               << update_duration
               << " us"

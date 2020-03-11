@@ -5,8 +5,8 @@
 
 namespace csc586_matrix
 {
-    using Score = double;
-    using Entry = double;
+    using Score = float;
+    using Entry = float;
     using Count = uint32_t;
 
     namespace soa_matrix
