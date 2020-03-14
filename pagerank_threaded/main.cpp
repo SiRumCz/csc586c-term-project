@@ -17,6 +17,7 @@ using namespace csc586_matrix::soa_matrix;
 const int N = 10000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
 const std::string filename = "../test/erdos-10000.txt";
+static const int NUM_THREADS = 10;
 
 void print_scores( Tables *table )
 {
@@ -134,7 +135,7 @@ void cal_pagerank( Tables *table )
             old_scores.push_back( table->scores[ j ] );
         }
         /* update pagerank scores */
-        //#pragma omp parallel for
+        #pragma omp parallel for num_threads(NUM_THREADS)
         for ( auto j = 0; j < N; ++j )
         {
             double sum = 0.0;
@@ -175,7 +176,7 @@ int main ()
     cal_pagerank( t );
     auto const end_time = std::chrono::steady_clock::now();
     //print_scores( t );
-    print_score_sum( t );
+    //print_score_sum( t );
     
     std::cout << "Calculation time = "
 		      << std::chrono::duration_cast<std::chrono::microseconds>( end_time - start_time ).count()
