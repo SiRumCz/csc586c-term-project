@@ -78,6 +78,6 @@ Total time = 514311 us
        0.224097000 seconds sys
 ```
 
-### Result
+### conclusion
 
-As we can see from the running time for pagerank calculation, by utilizing 8 threads on a 4-core Intel i7-4790 Desktop Linux platform, we now have a 5x speed up from 2,000,000 us down to 400,000 us (12.9x on 8-core MacOS)
+As we can see from the running time for pagerank calculation, by utilizing 8 threads on a 4-core Intel i7-4790 Desktop Linux platform, we now have a 5x speed up from 2,000,000 us down to 400,000 us (12.9x on 8-core MacOS).

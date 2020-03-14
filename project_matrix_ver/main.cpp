@@ -9,6 +9,7 @@
 #include <chrono> // timing
 #include <algorithm> // sort
 #include <numeric> // accumulate
+#include "omp.h"
 
 #include "pagerank.hpp"
 
@@ -126,6 +127,7 @@ void read_inputfile( Tables *table )
 
 void update_entries( Tables *table )
 {
+    #pragma omp parallel for
     for ( auto i = 0; i < N; ++i )
     {
         for ( auto j = 0; j < N; ++j )
@@ -151,14 +153,17 @@ void cal_pagerank( Tables *table )
     {
         /* scores from previous iteration */
         std::vector< Score > old_scores = {};
+        #pragma omp parallel for
         for ( auto j = 0; j < N; ++j )
         {
             old_scores.push_back( table->scores[ j ] );
         }
         /* update pagerank scores */
+        float sum = 0.0f;
+        #pragma omp parallel for reduction ( +:sum )
         for ( auto j = 0; j < N; ++j )
         {
-            float sum = 0.0f;
+            sum = 0.0f;
             for ( auto k = 0; k < N; ++k )
             {
                 sum += old_scores[ k ] * table->ij_entries_matrix[ j ][ k ];

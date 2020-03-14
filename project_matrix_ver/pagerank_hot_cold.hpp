@@ -14,14 +14,14 @@ namespace csc586_matrix
         /* data accessed during the pagerank algorithm */
         struct Tables_Hot
         {
-            Score score; // 8 bytes
+            Score score; // 4 bytes
             std::vector< Entry > entries_col; // 24 bytes
         };
         /* data used in prep stage */
         struct Tables_Cold
         {
             Count num_entry; // 4 bytes
-            std::vector< Count > visited_col;
+            std::vector< Count > visited_col; // 24 bytes
         };
         /* final matrix table consists of hot and cold data */
         struct Matrix_soa

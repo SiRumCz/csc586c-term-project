@@ -7,7 +7,6 @@
 #include <string>
 #include <tuple>
 #include <chrono> // timing
-#include <numeric> // accumulate
 #include <algorithm> // sort
 #include <omp.h>    // for multi-core parallelism
 
@@ -17,9 +16,9 @@ using namespace csc586_matrix;
 using namespace csc586_matrix::soa_matrix;
 
 /* global variables */
-const int N = 10000; // number of nodes
+const int N = 100000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
-const std::string filename = "../test/erdos-10000.txt";
+const std::string filename = "../test/erdos-100000.txt";
 const float d = 0.85f; // damping factor. 0.85 as defined by Google
 
 void print_scores( Matrix_soa *table )
@@ -131,7 +130,7 @@ void read_inputfile( Matrix_soa *table )
 
 void update_entries( Matrix_soa *table )
 {
-    #pragma omp parallel for num_threads( 8 )
+    #pragma omp parallel for
     for ( auto i = 0; i < N; ++i )
     {
         for ( auto j = 0; j < N; ++j )
@@ -158,24 +157,23 @@ void cal_pagerank( Matrix_soa *table )
         /* scores from previous iteration */
         std::vector< Score > old_scores = {};
         old_scores.reserve( N );
-        #pragma omp parallel for num_threads( 8 )
+        #pragma omp parallel for reduction( +:sum )
         for ( auto j = 0; j < N; ++j )
         {
             old_scores[ j ] = table->hot[ j ].score;
         }
         /* update pagerank scores */
-        #pragma omp parallel for num_threads( 8 )
+        float sum = 0.0f;
+        /* handling critical section with omp reduction */
+        // #pragma omp parallel for reduction( +:sum ) num_threads( 1 )
         for ( auto j = 0; j < N; ++j )
         {
-            float sum [ 2 ] = { 0.0f, 0.0f };
-            #pragma omp parallel for num_threads( 2 )
+            sum = 0.0f;
             for ( auto k = 0; k < N; ++k )
             {
-                auto const th_id = omp_get_thread_num();
-                sum[ th_id ] += old_scores[ k ] * table->hot[ j ].entries_col[ k ];
+                sum += old_scores[ k ] * table->hot[ j ].entries_col[ k ];
             }
-            table->hot[ j ].score = d * old_scores[ j ] + \
-            ( 1.0f - d ) * std::accumulate( std::begin( sum ), std::end( sum ), 0.0f );
+            table->hot[ j ].score = d * old_scores[ j ] + ( 1.0f - d ) * sum;
         }
     }
 }
