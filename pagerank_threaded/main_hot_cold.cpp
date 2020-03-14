@@ -132,7 +132,7 @@ void read_inputfile( Matrix_soa *table )
 
 void update_entries( Matrix_soa *table )
 {
-    //#pragma omp parallel for num_threads( NUM_THREADS )
+    #pragma omp parallel for num_threads( NUM_THREADS )
     for ( auto i = 0; i < N; ++i )
     {
         for ( auto j = 0; j < N; ++j )
@@ -159,14 +159,14 @@ void cal_pagerank( Matrix_soa *table )
         /* scores from previous iteration */
         std::vector< Score > old_scores = {};
         old_scores.reserve( N );
-        //#pragma omp parallel for num_threads( NUM_THREADS )
+        #pragma omp parallel for num_threads( NUM_THREADS )
         for ( auto j = 0; j < N; ++j )
         {
             old_scores[ j ] = table->hot[ j ].score;
         }
         /* update pagerank scores */
         float sum = 0.0f;
-        //#pragma omp parallel for reduction(+:sum) num_threads( NUM_THREADS )
+        #pragma omp parallel for reduction(+:sum) num_threads( NUM_THREADS )
         for ( auto j = 0; j < N; ++j )
         {
             sum = 0.0f;
