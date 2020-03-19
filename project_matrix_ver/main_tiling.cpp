@@ -10,10 +10,10 @@
 #include <numeric> // accumulate
 #include <algorithm> // sort
 
-#include "pagerank_hot_cold.hpp"
+#include "pagerank.hpp"
 
 using namespace csc586_matrix;
-using namespace csc586_matrix::soa_matrix;
+using namespace csc586_matrix::soa_matrix_hot_cold;
 
 /* global variables */
 const int N = 10000; // number of nodes
