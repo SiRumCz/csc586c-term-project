@@ -10,15 +10,15 @@
 #include <algorithm> // sort
 #include <omp.h>    // for multi-core parallelism
 
-#include "pagerank_hot_cold.hpp"
+#include "pagerank.hpp"
 
 using namespace csc586_matrix;
-using namespace csc586_matrix::soa_matrix;
+using namespace csc586_matrix::soa_matrix_hot_cold;
 
 /* global variables */
-const int N = 100000; // number of nodes
+const int N = 10000; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
-const std::string filename = "../test/erdos-100000.txt";
+const std::string filename = "../test/erdos-10000.txt";
 const float d = 0.85f; // damping factor. 0.85 as defined by Google
 
 void print_scores( Matrix_soa *table )
@@ -157,7 +157,7 @@ void cal_pagerank( Matrix_soa *table )
         /* scores from previous iteration */
         std::vector< Score > old_scores = {};
         old_scores.reserve( N );
-        #pragma omp parallel for reduction( +:sum )
+        #pragma omp parallel for
         for ( auto j = 0; j < N; ++j )
         {
             old_scores[ j ] = table->hot[ j ].score;
@@ -165,7 +165,7 @@ void cal_pagerank( Matrix_soa *table )
         /* update pagerank scores */
         float sum = 0.0f;
         /* handling critical section with omp reduction */
-        // #pragma omp parallel for reduction( +:sum ) num_threads( 1 )
+        #pragma omp parallel for reduction( +:sum )
         for ( auto j = 0; j < N; ++j )
         {
             sum = 0.0f;

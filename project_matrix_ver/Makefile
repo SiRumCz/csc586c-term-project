@@ -1,7 +1,7 @@
 OS := $(shell uname)
 
 ifeq ($(OS), Darwin)
-pagerank_matrix: pagerank.hpp main.cpp pagerank_hot_cold.hpp main_hot_cold.cpp
+pagerank_matrix: pagerank.hpp main.cpp main_hot_cold.cpp
 	@echo "You are running on MacOS"
 	# baseline Og
 	g++ -Og -Wall -std=c++17 -o pr_baseline_Og main.cpp 
@@ -16,7 +16,7 @@ pagerank_matrix: pagerank.hpp main.cpp pagerank_hot_cold.hpp main_hot_cold.cpp
 	# hot and cold, tiling O3
 	g++ -Og -Wall -std=c++17 -o pr_tiling_O3 main_tiling.cpp
 else ifeq ($(OS), Linux)
-pagerank_matrix: pagerank.hpp main.cpp pagerank_hot_cold.hpp main_hot_cold.cpp
+pagerank_matrix: pagerank.hpp main.cpp main_hot_cold.cpp
 	@echo "You are running on Linux"
 	# baseline Og
 	g++ -Og -Wall -std=c++17 -o pr_baseline_Og main.cpp 
