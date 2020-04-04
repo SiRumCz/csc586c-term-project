@@ -5,17 +5,19 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <tuple>
 #include <vector>
 #include <chrono> // timing
 #include <algorithm> // sort
+#include <omp.h>    // for multi-core parallelism
 
-/* global variables, this is where you would change the parameters */
+
+/* global variables */
 const long long N = 62586; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
 const std::string filename = "p2p-Gnutella31.txt";
 const float d = 0.85f; // damping factor. 0.85 as defined by Google
-const int blocksize = 512;
 
 typedef float trans_m_col[N];
 typedef int vis_m_col[N];
@@ -34,7 +36,6 @@ void read_inputfile( vis_m_col *visited_matrix, int outgoing_table[ N ] )
 	
     std::string line;
     int a, b;
-    int count_edge = 0;
     while ( getline( infile, line ) )
     {
 		std::istringstream iss( line );
@@ -45,61 +46,60 @@ void read_inputfile( vis_m_col *visited_matrix, int outgoing_table[ N ] )
 		
         visited_matrix[ a ][ b ] = 1;
         outgoing_table[ a ] += 1;
-
-        count_edge++;
 	}
 
-    infile.close();
-
-    // report shape
-    std::cout << "finish reading graph ... \n"
-              << N << " nodes\n"
-              << count_edge << " edges" 
-              << std::endl; 
+	infile.close();
 }
 
 /**
  * outgoing_table, transition_matrix, visited_matrix
 */
-__global__
-void update_entries( trans_m_col *transition_matrix, vis_m_col *visited_matrix, int *outgoing_table, int N )
+void update_entries( trans_m_col *transition_matrix, vis_m_col *visited_matrix, int *outgoing_table )
 {
-    int const idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int const i = idx / N;
-    int const j = idx % N;
-
-    if (i < N && j < N)
+    #pragma omp parallel for
+    for ( auto i = 0; i < N; ++i )
     {
-        if ( outgoing_table[ j ] == 0 )
+        for ( auto j = 0; j < N; ++j )
         {
-            // dangling node: 1 / N
-            transition_matrix[ i ][ j ] = 1.0f / N;
+            if ( outgoing_table[ j ] == 0 )
+            {
+                // dangling node: 1 / N
+                transition_matrix[ i ][ j ] = 1.0f / N;
+            }
+            else if ( visited_matrix[ j ][ i ] == 1 )
+            {
+                // if v(j, i) is visited then a(ij) = 1/L(j)
+                transition_matrix[ i ][ j ] = 1.0f / outgoing_table[ j ];
+            }
+            // else{ table->ij_entries_matrix[ i ][ j ] = 0.0; }
         }
-        else if ( visited_matrix[ j ][ i ] == 1 )
-        {
-            // if v(j, i) is visited then a(ij) = 1/L(j)
-            transition_matrix[ i ][ j ] = 1.0f / outgoing_table[ j ];
-        }
-        // else{ table->ij_entries_matrix[ i ][ j ] = 0.0; }
     }
-
 }
 
-__global__
-void pagerank( float *score_table, float *old_score_table, trans_m_col *transition_matrix, float d, int N )
+void pagerank( float score_table[ N ], trans_m_col *transition_matrix )
 {
-    int const j = threadIdx.x + blockIdx.x * blockDim.x;
-
-    if (j < N)
+    for ( auto i = 0; i < num_iter - 1; ++i )
     {
+        /* scores from previous iteration */
+        float old_scores[ N ] = { 0.0f };
+        #pragma omp parallel for
+        for ( auto j = 0; j < N; ++j )
+        {
+            old_scores[ j ] = score_table[ j ];
+        }
         /* update pagerank scores */
         float sum = 0.0f;
-
-        for ( auto k = 0; k < N; ++k )
+        /* handling critical section with omp reduction */
+        #pragma omp parallel for reduction( +:sum )
+        for ( auto j = 0; j < N; ++j )
         {
-            sum += old_score_table[ k ] * transition_matrix[ j ][ k ];
+            sum = 0.0f;
+            for ( auto k = 0; k < N; ++k )
+            {
+                sum += old_scores[ k ] * transition_matrix[ j ][ k ];
+            }
+            score_table[ j ] = d * old_scores[ j ] + ( 1.0f - d ) * sum;
         }
-        score_table[ j ] = d * old_score_table[ j ] + ( 1.0f - d ) * sum;
     }
 }
 
@@ -116,41 +116,36 @@ void print_top_5( float arr[ N ] )
         sorted.push_back( std::tuple< int, float >{ i, arr[ i ] } );
     }
     std::sort( sorted.begin(), sorted.end(), comp );
-    
-    std::cout << "Top five:" << std::endl;
-
-    for ( auto i = 0; i < std::min( ( long long ) 5, N); ++i )
+    for ( auto i = 0; i < std::min( ( long long ) 5, N ); ++i )
     {
         std::cout << std::get< 0 >( sorted[ i ] ) << "(" << std::get< 1 >( sorted[ i ] ) << ") ";
     }
     std::cout << std::endl;
 }
 
-void print_total( float arr[] )
+void print_total( float arr[ N ] )
 {
     float sum = 0.0f;
     for ( auto i = 0; i < N; ++i )
     {
         sum += arr[ i ];
     }
-    std::cout << "sum=" << sum << std::endl;
+    std::cout << "s=" << sum << std::endl;
 }
 
 int main()
 {
     auto const total_start_time = std::chrono::steady_clock::now();
-    auto const score_t_size = N * sizeof(float);
-    auto const out_t_size = N * sizeof(int);
+
     auto const vis_m_size = N * N * sizeof(int);
     auto const trans_m_size = N * N * sizeof(float);
-
     vis_m_col *visited_matrix;
     visited_matrix = ( vis_m_col * )malloc( vis_m_size );
-    memset(visited_matrix, 0, vis_m_size);
+    std::memset(visited_matrix, 0, vis_m_size);
 
     trans_m_col *transition_matrix;
     transition_matrix = ( trans_m_col * )malloc( trans_m_size );
-    memset(transition_matrix, 0, trans_m_size);
+    std::memset(transition_matrix, 0, trans_m_size);
 
     float score_table[ N ] = { 0 };
     std::fill_n(score_table, N, 1.0f / N );
@@ -158,57 +153,20 @@ int main()
 
     read_inputfile( visited_matrix, outgoing_table );
     
-    float *dev_score_table, *dev_old_score_table;
-    int *dev_outgoing_table;
-    vis_m_col *dev_visited_matrix;
-    trans_m_col *dev_transition_matrix;
-
-    cudaMalloc( &dev_score_table, score_t_size );
-    cudaMalloc( &dev_old_score_table, score_t_size );
-    cudaMalloc( &dev_outgoing_table, out_t_size );
-    cudaMalloc( &dev_visited_matrix, vis_m_size );
-    cudaMalloc( &dev_transition_matrix, trans_m_size );
-    
-    cudaMemcpy( dev_score_table, score_table, score_t_size, cudaMemcpyHostToDevice );
-    cudaMemcpy( dev_outgoing_table, outgoing_table, out_t_size, cudaMemcpyHostToDevice );
-    cudaMemcpy( dev_visited_matrix, visited_matrix, vis_m_size, cudaMemcpyHostToDevice );
-    cudaMemcpy( dev_transition_matrix, transition_matrix, trans_m_size, cudaMemcpyHostToDevice );
-
-    
     /* timing the pre processing */
     auto const update_start_time = std::chrono::steady_clock::now();
-
-    auto num_blocks = ceil( N * N / static_cast< float >( blocksize ) );
-    update_entries<<< num_blocks, blocksize >>>( dev_transition_matrix, dev_visited_matrix, dev_outgoing_table, N );
-
+    update_entries( transition_matrix, visited_matrix, outgoing_table );
     auto const update_end_time = std::chrono::steady_clock::now();
     auto const update_time = std::chrono::duration_cast< std::chrono::microseconds >\
     ( update_end_time - update_start_time ).count();
-    
+
     /* timing the pagerank algorithm */
     auto const pagerank_start_time = std::chrono::steady_clock::now();
 
-    num_blocks = ceil( N / static_cast< float >( blocksize ) );
-    /* iterations must be serial */
-    for ( auto i = 0; i < num_iter - 1; ++i )
-    {
-        /* scores from previous iteration */
-        cudaMemcpy( dev_old_score_table, dev_score_table, score_t_size, cudaMemcpyDeviceToDevice );
-        pagerank<<< num_blocks, blocksize >>>( dev_score_table, dev_old_score_table, dev_transition_matrix, d, N );
-    }
-
+    pagerank( score_table, transition_matrix );
     auto const pagerank_end_time = std::chrono::steady_clock::now();
     auto const pagerank_time = std::chrono::duration_cast< std::chrono::microseconds >\
     ( pagerank_end_time - pagerank_start_time ).count();
-
-    /* retrieve final scores array from device and store back to host */
-    cudaMemcpy(score_table, dev_score_table, score_t_size, cudaMemcpyDeviceToHost);
-
-    cudaFree( dev_score_table );
-    cudaFree( dev_old_score_table );
-    cudaFree( dev_outgoing_table );
-    cudaFree( dev_visited_matrix );
-    cudaFree( dev_transition_matrix );
 
     auto const total_end_time = std::chrono::steady_clock::now();
     auto const total_time = std::chrono::duration_cast< std::chrono::microseconds >\
@@ -217,13 +175,13 @@ int main()
     print_top_5( score_table );
     print_total( score_table );
 
-    std::cout << "in_kernel_update_time = "
+    std::cout << "update_time = "
               << update_time
               << " us"
-              << "\nin_kernel_pagerank_time = "
+              << "\npagerank_time = "
 		      << pagerank_time
 		      << " us" 
-              << "\nprogram_total_time = "
+              << "\ntotal_time = "
               << total_time
               << " us"
               << std::endl;
