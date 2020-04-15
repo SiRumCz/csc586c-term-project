@@ -11,9 +11,9 @@
 #include <algorithm> // sort
 
 /* global variables, this is where you would change the parameters */
-const long long N = 62586; // number of nodes
+const long long N = 10876; // number of nodes
 const int num_iter = 10; // number of pagerank iterations
-const std::string filename = "p2p-Gnutella31.txt";
+const std::string filename = "p2p-Gnutella04.txt";
 const float d = 0.85f; // damping factor. 0.85 as defined by Google
 const int blocksize = 512;
 
@@ -168,6 +168,9 @@ int main()
     cudaMalloc( &dev_outgoing_table, out_t_size );
     cudaMalloc( &dev_visited_matrix, vis_m_size );
     cudaMalloc( &dev_transition_matrix, trans_m_size );
+
+    cudaError_t err = cudaGetLastError();  // add
+    if (err != cudaSuccess) std::cout << "CUDA error: " << cudaGetErrorString(err) << std::endl; // add
     
     cudaMemcpy( dev_score_table, score_table, score_t_size, cudaMemcpyHostToDevice );
     cudaMemcpy( dev_outgoing_table, outgoing_table, out_t_size, cudaMemcpyHostToDevice );
