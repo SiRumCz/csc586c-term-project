@@ -1,0 +1,22 @@
+p2p-Gnutella08
+nodes: 6301
+
+p2p-Gnutella05
+nodes: 8846
+
+erdos-10000
+nodes: 10000
+
+p2p-Gnutella04
+nodes: 10876
+
+erdos-20000
+nodes: 20000
+
+p2p-Gnutella25
+nodes: 22687
+
+erdos-50000
+nodes: 50000
+
+
