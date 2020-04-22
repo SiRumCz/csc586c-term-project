@@ -33,22 +33,22 @@ void read_inputfile( vis_m_col *visited_matrix, int outgoing_table[ N ] )
         infile.close();
         exit( 1 );
     }
-	
+    
     std::string line;
     int a, b;
     while ( getline( infile, line ) )
     {
-		std::istringstream iss( line );
-		if ( ! ( iss >> a >> b ) ) { break; } // Format error.
+        std::istringstream iss( line );
+        if ( ! ( iss >> a >> b ) ) { break; } // Format error.
 
-    	// Process pair (a, b).
+        // Process pair (a, b).
         // std::cout << a << " " << b << std::endl;
-		
+        
         visited_matrix[ a ][ b ] = 1;
         outgoing_table[ a ] += 1;
-	}
+    }
 
-	infile.close();
+    infile.close();
 }
 
 /**
@@ -153,20 +153,16 @@ int main( int argc, char * argv[] )
 
     read_inputfile( visited_matrix, outgoing_table );
     
-    /* timing the pre processing */
-    auto const update_start_time = std::chrono::steady_clock::now();
-    update_entries( transition_matrix, visited_matrix, outgoing_table );
-    auto const update_end_time = std::chrono::steady_clock::now();
-    auto const update_time = std::chrono::duration_cast< std::chrono::microseconds >\
-    ( update_end_time - update_start_time ).count();
+    /* timing the PageRank algorithm */
+    auto const pr_start_time = std::chrono::steady_clock::now();
 
-    /* timing the pagerank algorithm */
-    auto const pagerank_start_time = std::chrono::steady_clock::now();
+    update_entries( transition_matrix, visited_matrix, outgoing_table );
 
     pagerank( score_table, transition_matrix );
-    auto const pagerank_end_time = std::chrono::steady_clock::now();
-    auto const pagerank_time = std::chrono::duration_cast< std::chrono::microseconds >\
-    ( pagerank_end_time - pagerank_start_time ).count();
+
+    auto const pr_end_time = std::chrono::steady_clock::now();
+    auto const pr_time = std::chrono::duration_cast< std::chrono::microseconds >\
+    ( pr_end_time - pr_start_time ).count();
 
     auto const total_end_time = std::chrono::steady_clock::now();
     auto const total_time = std::chrono::duration_cast< std::chrono::microseconds >\
@@ -175,12 +171,9 @@ int main( int argc, char * argv[] )
     print_top_5( score_table );
     print_total( score_table );
 
-    std::cout << "update_time = "
-              << update_time
-              << " us"
-              << "\npagerank_time = "
-		      << pagerank_time
-		      << " us" 
+    std::cout << "pagerank_time = "
+              << pr_time
+              << " us" 
               << "\ntotal_time = "
               << total_time
               << " us"

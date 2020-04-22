@@ -30,8 +30,7 @@ tests = [("p2p-Gnutella08.txt", "6301"),
 		("p2p-Gnutella30.txt", "36682")]
 
 # results
-update_time = {"bl": [], "cpu": [], "gpu": []}
-calc_time = {"bl": [], "cpu": [], "gpu": []}
+pr_time = {"bl": [], "cpu": [], "gpu": []}
 total_time = {"bl": [], "cpu": [], "gpu": []}
 
 
@@ -56,9 +55,8 @@ for mode in modes:
 		stdout = stdout.decode("utf-8")
 		print(stdout)
 		stdout = stdout.split("\n")
-		update_time[mode] += [int(stdout[2].split(" ")[-2])] # "update_time = ? us"
-		calc_time[mode] += [int(stdout[3].split(" ")[-2])] # "pagerank_time = ? us"
-		total_time[mode] += [int(stdout[4].split(" ")[-2])] # "total_time = ? us"
+		pr_time[mode] += [int(stdout[2].split(" ")[-2])] # "pagerank_time = ? us"
+		total_time[mode] += [int(stdout[3].split(" ")[-2])] # "total_time = ? us"
 
 # clear up
 os.system("rm -f temp.cpp")
@@ -74,7 +72,6 @@ with open("results.txt", "w") as f:
 		for i in range(n):
 			f.write(tests[i][0] + " ")
 			f.write(tests[i][1] + " ")
-			f.write(str(update_time[mode][i]) + " ")
-			f.write(str(calc_time[mode][i]) + " ")
+			f.write(str(pr_time[mode][i]) + " ")
 			f.write(str(total_time[mode][i]) + "\n")
 	

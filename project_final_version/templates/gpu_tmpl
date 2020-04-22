@@ -31,23 +31,23 @@ void read_inputfile( vis_m_col *visited_matrix, int outgoing_table[ N ] )
         infile.close();
         exit( 1 );
     }
-	
+    
     std::string line;
     int a, b;
     int count_edge = 0;
     while ( getline( infile, line ) )
     {
-		std::istringstream iss( line );
-		if ( ! ( iss >> a >> b ) ) { break; } // Format error.
+        std::istringstream iss( line );
+        if ( ! ( iss >> a >> b ) ) { break; } // Format error.
 
-    	// Process pair (a, b).
+        // Process pair (a, b).
         // std::cout << a << " " << b << std::endl;
-		
+        
         visited_matrix[ a ][ b ] = 1;
         outgoing_table[ a ] += 1;
 
         count_edge++;
-	}
+    }
 
     infile.close();
 }
@@ -170,18 +170,11 @@ int main()
     cudaMemcpy( dev_transition_matrix, transition_matrix, trans_m_size, cudaMemcpyHostToDevice );
 
     
-    /* timing the pre processing */
-    auto const update_start_time = std::chrono::steady_clock::now();
+    /* timing the PageRank algorithm */
+    auto const pr_start_time = std::chrono::steady_clock::now();
 
     auto num_blocks = ceil( N * N / static_cast< float >( blocksize ) );
     update_entries<<< num_blocks, blocksize >>>( dev_transition_matrix, dev_visited_matrix, dev_outgoing_table, N );
-
-    auto const update_end_time = std::chrono::steady_clock::now();
-    auto const update_time = std::chrono::duration_cast< std::chrono::microseconds >\
-    ( update_end_time - update_start_time ).count();
-    
-    /* timing the pagerank algorithm */
-    auto const pagerank_start_time = std::chrono::steady_clock::now();
 
     num_blocks = ceil( N / static_cast< float >( blocksize ) );
     /* iterations must be serial */
@@ -192,12 +185,12 @@ int main()
         pagerank<<< num_blocks, blocksize >>>( dev_score_table, dev_old_score_table, dev_transition_matrix, d, N );
     }
 
-    auto const pagerank_end_time = std::chrono::steady_clock::now();
-    auto const pagerank_time = std::chrono::duration_cast< std::chrono::microseconds >\
-    ( pagerank_end_time - pagerank_start_time ).count();
-
     /* retrieve final scores array from device and store back to host */
     cudaMemcpy(score_table, dev_score_table, score_t_size, cudaMemcpyDeviceToHost);
+
+    auto const pr_end_time = std::chrono::steady_clock::now();
+    auto const pr_time = std::chrono::duration_cast< std::chrono::microseconds >\
+    ( pr_end_time - pr_start_time ).count();
 
     cudaFree( dev_score_table );
     cudaFree( dev_old_score_table );
@@ -212,12 +205,9 @@ int main()
     print_top_5( score_table );
     print_total( score_table );
 
-    std::cout << "in_kernel_update_time = "
-              << update_time
-              << " us"
-              << "\nin_kernel_pagerank_time = "
-		      << pagerank_time
-		      << " us" 
+    std::cout << "in_kernel_pagerank_time = "
+              << pr_time
+              << " us" 
               << "\nprogram_total_time = "
               << total_time
               << " us"
