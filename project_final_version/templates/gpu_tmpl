@@ -50,12 +50,6 @@ void read_inputfile( vis_m_col *visited_matrix, int outgoing_table[ N ] )
 	}
 
     infile.close();
-
-    // report shape
-    std::cout << "finish reading graph ... \n"
-              << N << " nodes\n"
-              << count_edge << " edges" 
-              << std::endl; 
 }
 
 /**
@@ -117,8 +111,6 @@ void print_top_5( float arr[ N ] )
     }
     std::sort( sorted.begin(), sorted.end(), comp );
     
-    std::cout << "Top five:" << std::endl;
-
     for ( auto i = 0; i < std::min( ( long long ) 5, N); ++i )
     {
         std::cout << std::get< 0 >( sorted[ i ] ) << "(" << std::get< 1 >( sorted[ i ] ) << ") ";
