@@ -8,7 +8,6 @@ from the outputs.
 
 import os
 import subprocess
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 
@@ -88,7 +87,7 @@ for mode in modes:
 
 # plot total runtimes for all the three modes in one graph
 n = len(num_nodes) # number of tests
-X = np.arange(n)
+X = list(range(n))
 cpu_spdup = [total_time["bl"][i]/total_time["cpu"][i] for i in range(n)]
 gpu_spdup = [total_time["bl"][i]/total_time["gpu"][i] for i in range(n)]
 
