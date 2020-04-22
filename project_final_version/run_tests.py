@@ -24,14 +24,12 @@ path = "../tests/"
 # [(filename, num_nodes)]
 tests = [("p2p-Gnutella08.txt", "6301"),
 		("p2p-Gnutella05.txt", "8846"),
-		("erdos-10000.txt", "10000"),
 		("p2p-Gnutella04.txt", "10876"),
-		("erdos-20000.txt", "20000"),
 		("p2p-Gnutella25.txt", "22687"),
-		("erdos-50000.txt", "50000")]
+		("p2p-Gnutella24.txt", "26518"),
+		("p2p-Gnutella30.txt", "36682")]
 
 # results
-num_nodes = []
 update_time = {"bl": [], "cpu": [], "gpu": []}
 calc_time = {"bl": [], "cpu": [], "gpu": []}
 total_time = {"bl": [], "cpu": [], "gpu": []}
@@ -39,11 +37,10 @@ total_time = {"bl": [], "cpu": [], "gpu": []}
 
 # run scripts for each mode for each test input and get results
 for mode in modes:
-	print("Mode", mode)
+	print("Mode", mode + "\n")
 	infile_name = "templates/" + template[mode] # template
 	for filename, N in tests:
-		print("	Test", filename)
-		num_nodes += [int(N)]
+		print("Test", filename)
 		with open(infile_name, "r") as f_in:
 			code = f_in.read()
 			code = code.replace("{{filename}}", path + filename)
@@ -68,15 +65,15 @@ os.system("rm -f temp.cpp")
 os.system("rm -f temp.cu")
 os.system("rm -f a.out")
 
-os.system("mkdir results")
 # store results to a text file
-with open("results/results.txt", "w") as f:
+with open("results.txt", "w") as f:
 	n = len(tests) # number of tests
 	f.write(str(n) + "\n")
 	for mode in modes:
 		f.write(mode + "\n")
 		for i in range(n):
-			f.write(tests[i][0] + " ") # filename of test input
+			f.write(tests[i][0] + " ")
+			f.write(tests[i][1] + " ")
 			f.write(str(update_time[mode][i]) + " ")
 			f.write(str(calc_time[mode][i]) + " ")
 			f.write(str(total_time[mode][i]) + "\n")
