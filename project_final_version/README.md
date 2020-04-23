@@ -6,7 +6,7 @@ To let each of the programs (naive, baseline, CPU and GPGPU) run the tests of 6 
 
     $ python3 run_tests.py
     
-The results will be output to results.txt, where the first line is the number of tests (n), followed by the program mode (naive, baseline, CPU or GPGPU), then followed by n lines, and each line has 4 tokens: test input filename, number of nodes in test, algorithm runtime, totoal runtime. See results.txt for our output example.
+The results will be output to results.txt, where the first line is the number of tests (n), followed by the program mode ("naive", "bl", "cpu" or "gpu"), then followed by n lines, and each line has 4 tokens: test input filename, number of nodes in test, algorithm runtime and totoal runtime. See results.txt for our output example.
 
 Then, you can make plots with another Python script plot.py, which will make a directory plots/ and output 5 images for the all the 4 modes and a comparision between CPU & GPGPU to baseline:
 
